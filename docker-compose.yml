@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      CHECKPOINT_DIR: /model/sentiment-distilbert
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    volumes:
+      - ./model/sentiment-distilbert:/model/sentiment-distilbert:ro
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - backend
