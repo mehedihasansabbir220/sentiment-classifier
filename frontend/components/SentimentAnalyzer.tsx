@@ -7,7 +7,7 @@ import { ExampleReviews } from "@/components/ExampleReviews";
 import { LoadingState } from "@/components/LoadingState";
 import { SentimentInput } from "@/components/SentimentInput";
 import { SentimentResult } from "@/components/SentimentResult";
-import { ApiError, ValidationError, predictSentiment } from "@/lib/api";
+import { AppError, errorFromUnknown, predictSentiment } from "@/lib/api";
 import type { PredictionResponse } from "@/lib/types";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -22,7 +22,7 @@ export function SentimentAnalyzer() {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<PredictionResponse | null>(null);
   const [resultKey, setResultKey] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AppError | null>(null);
 
   const isLoading = status === "loading";
 
@@ -39,12 +39,7 @@ export function SentimentAnalyzer() {
       setResultKey((previous) => previous + 1);
       setStatus("success"); // 5-7. Result, confidence and probabilities render.
     } catch (caught) {
-      // 8. Handle API errors.
-      setError(
-        caught instanceof ValidationError || caught instanceof ApiError
-          ? caught.message
-          : "Something went wrong while analyzing this text. Please try again.",
-      );
+      setError(caught instanceof AppError ? caught : errorFromUnknown());
       setStatus("error");
     }
   };
@@ -71,7 +66,11 @@ export function SentimentAnalyzer() {
       {status === "loading" ? <LoadingState /> : null}
 
       {status === "error" && error ? (
-        <ErrorState message={error} onRetry={() => void runAnalysis(text)} />
+        <ErrorState
+          title={error.title}
+          message={error.message}
+          onRetry={error.retryable ? () => void runAnalysis(text) : undefined}
+        />
       ) : null}
 
       {status === "success" && result ? (

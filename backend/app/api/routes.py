@@ -1,20 +1,18 @@
 """HTTP routes.
 
 Routes only validate input, delegate, and shape the response. All model and
-tensor work lives in :mod:`app.services.sentiment_service`.
+tensor work lives in :mod:`app.services.sentiment_service`. Failures bubble
+as :class:`~app.errors.AppError` subclasses and are turned into structured
+JSON by the handlers in :mod:`app.errors`.
 """
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 
+from app.errors import AppError
 from app.schemas import HealthResponse, PredictRequest, PredictResponse
-from app.services.sentiment_service import (
-    InferenceError,
-    InvalidTextError,
-    SentimentService,
-    get_sentiment_service,
-)
+from app.services.sentiment_service import SentimentService, get_sentiment_service
 
 logger = logging.getLogger(__name__)
 
@@ -32,20 +30,13 @@ def predict(
     service: SentimentService = Depends(get_sentiment_service),
 ) -> PredictResponse:
     """Classify a single text as positive or negative."""
-    # A missing model raises ModelLoadError from the dependency above and is
-    # turned into a 503 by the handler registered in app.main.
     try:
         result = service.predict(payload.text)
-    except InvalidTextError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
-        ) from exc
-    except InferenceError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to run inference on the provided text.",
-        ) from exc
+    except AppError:
+        raise
+    except Exception:
+        logger.exception("Unexpected error during prediction")
+        raise AppError() from None
 
     return PredictResponse(
         text=result.text,

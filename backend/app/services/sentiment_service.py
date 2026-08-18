@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 
 import torch
 
+from app.errors import EmptyTextError, InferenceError, InvalidTextError
 from app.models.model_loader import SentimentModel, get_model
 
 logger = logging.getLogger(__name__)
@@ -28,17 +29,8 @@ ROUND_TO = 4
 # Fallback only — the real names come from the checkpoint's config.
 _FALLBACK_LABELS = {0: "negative", 1: "positive"}
 
-
-class SentimentServiceError(RuntimeError):
-    """Base class for inference-pipeline failures."""
-
-
-class InvalidTextError(ValueError):
-    """The input text is not something the model can classify."""
-
-
-class InferenceError(SentimentServiceError):
-    """The model failed to produce a prediction."""
+# Re-exported so existing imports keep working.
+SentimentServiceError = InferenceError
 
 
 @dataclass(frozen=True)
@@ -112,7 +104,7 @@ class SentimentService:
             raise InvalidTextError(f"text must be a string, got {type(text).__name__}")
         cleaned = text.strip()
         if not cleaned:
-            raise InvalidTextError("text must not be empty or whitespace only")
+            raise EmptyTextError("text must not be empty or whitespace only")
         return cleaned
 
     # ------------------------------------------------------------------
@@ -167,7 +159,7 @@ class SentimentService:
             return torch.softmax(logits, dim=-1).cpu()
         except Exception as exc:  # noqa: BLE001 - surfaced as InferenceError
             logger.exception("Inference failed")
-            raise InferenceError(f"Failed to run inference: {exc}") from exc
+            raise InferenceError(f"Failed to run inference: {type(exc).__name__}") from exc
 
     def _as_label_scores(self, row: torch.Tensor) -> dict[str, float]:
         """6. Map each class index to its configured label name.

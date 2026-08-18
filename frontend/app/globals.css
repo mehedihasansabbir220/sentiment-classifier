@@ -17,7 +17,7 @@
   --surface-sunken: #f2f2ef;
   --ink: #0b0b0b;
   --ink-secondary: #52514e;
-  --ink-muted: #898781;
+  --ink-muted: #6b6963;
   --line: #e1e0d9;
   --ring: rgba(11, 11, 11, 0.1);
 
@@ -37,7 +37,7 @@
     --surface-sunken: #131312;
     --ink: #ffffff;
     --ink-secondary: #c3c2b7;
-    --ink-muted: #898781;
+    --ink-muted: #9a988f;
     --line: #2c2c2a;
     --ring: rgba(255, 255, 255, 0.1);
 

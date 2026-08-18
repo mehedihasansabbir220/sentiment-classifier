@@ -22,6 +22,7 @@ import torch
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer
 
 from app.config import settings
+from app.errors import ModelLoadError, ModelNotFoundError, TokenizerLoadError
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +49,6 @@ _WEIGHT_FILES = (
 )
 
 
-class ModelLoadError(RuntimeError):
-    """Raised when the local checkpoint is missing, incomplete, or invalid."""
-
-
 @dataclass(frozen=True)
 class SentimentModel:
     """A loaded checkpoint and the context needed to run it.
@@ -75,33 +72,33 @@ def resolve_device() -> torch.device:
 def _validate_checkpoint_dir(model_path: Path) -> None:
     """Fail with an actionable message before Hugging Face is even called."""
     if not model_path.exists():
-        raise ModelLoadError(
+        raise ModelNotFoundError(
             f"Model directory not found: {model_path}. "
             "Copy the fine-tuned checkpoint exported from Colab into that "
             "directory, or point MODEL_PATH at its location."
         )
     if not model_path.is_dir():
-        raise ModelLoadError(
+        raise ModelNotFoundError(
             f"MODEL_PATH must be a directory containing the checkpoint, "
             f"but {model_path} is a file."
         )
 
     if not (model_path / "config.json").is_file():
-        raise ModelLoadError(
+        raise ModelNotFoundError(
             f"Model configuration not found: {model_path / 'config.json'}. "
             "The directory does not look like a Hugging Face checkpoint saved "
             "with save_pretrained()."
         )
 
     if not any((model_path / name).is_file() for name in _TOKENIZER_FILES):
-        raise ModelLoadError(
+        raise TokenizerLoadError(
             f"Tokenizer files are missing in {model_path}. Expected at least one "
             f"of: {', '.join(_TOKENIZER_FILES)}. Re-export the tokenizer with "
             "tokenizer.save_pretrained()."
         )
 
     if not any((model_path / name).is_file() for name in _WEIGHT_FILES):
-        raise ModelLoadError(
+        raise ModelNotFoundError(
             f"Model weights are missing in {model_path}. Expected at least one "
             f"of: {', '.join(_WEIGHT_FILES)}. Note that weights are gitignored, "
             "so a fresh clone will not contain them."
@@ -169,7 +166,7 @@ def load_model(model_path: Path | str | None = None) -> SentimentModel:
     try:
         tokenizer = AutoTokenizer.from_pretrained(path_str, local_files_only=True)
     except Exception as exc:  # noqa: BLE001
-        raise ModelLoadError(f"Failed to load the tokenizer from {path}: {exc}") from exc
+        raise TokenizerLoadError(f"Failed to load the tokenizer from {path}: {exc}") from exc
 
     try:
         model = AutoModelForSequenceClassification.from_pretrained(
@@ -181,7 +178,10 @@ def load_model(model_path: Path | str | None = None) -> SentimentModel:
         raise ModelLoadError(f"Failed to load the model weights from {path}: {exc}") from exc
 
     device = resolve_device()
-    model.to(device)
+    try:
+        model.to(device)
+    except Exception as exc:  # noqa: BLE001
+        raise ModelLoadError(f"Failed to place the model on {device}: {exc}") from exc
     model.eval()  # disable dropout; inference only
 
     logger.info(

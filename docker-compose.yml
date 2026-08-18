@@ -1,21 +1,41 @@
+# Full stack: FastAPI inference API + Next.js production UI.
+#
+# The fine-tuned model is NOT baked into any image and is NEVER downloaded.
+# It is supplied from the host at ./model/sentiment-distilbert and mounted
+# read-only, so the container cannot modify or retrain it.
+
+name: sentiment-classifier
+
 services:
   backend:
     build:
       context: ./backend
-    ports:
-      - "8000:8000"
+      args:
+        # CPU-only torch by default. For a CUDA image:
+        #   TORCH_INDEX_URL=https://pypi.org/simple docker compose build backend
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}
     environment:
-      MODEL_PATH: /model/sentiment-distilbert
-      CORS_ORIGINS: '["http://localhost:3000"]'
+      MODEL_PATH: ${MODEL_PATH:-/model/sentiment-distilbert}
+      CORS_ORIGINS: '${CORS_ORIGINS:-["http://localhost:3000"]}'
+      APP_NAME: ${APP_NAME:-Sentiment Classifier API}
     volumes:
+      # Read-only: the app only ever loads these weights.
       - ./model/sentiment-distilbert:/model/sentiment-distilbert:ro
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
+      args:
+        # Baked in at build time and used by the *browser*, so it must be the
+        # host-visible backend URL — not http://backend:8000.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
-      - backend
+      backend:
+        # Waits for the model to finish loading (see the backend HEALTHCHECK).
+        condition: service_healthy
+    restart: unless-stopped

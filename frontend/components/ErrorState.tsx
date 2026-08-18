@@ -1,10 +1,11 @@
 interface ErrorStateProps {
+  title?: string;
   message: string;
   onRetry?: () => void;
 }
 
 /** Inline error panel for a failed analysis. */
-export function ErrorState({ message, onRetry }: ErrorStateProps) {
+export function ErrorState({ title = "Analysis failed", message, onRetry }: ErrorStateProps) {
   return (
     <section
       role="alert"
@@ -27,7 +28,7 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
         </svg>
 
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-ink">Analysis failed</h2>
+          <h2 className="text-sm font-semibold text-ink">{title}</h2>
           <p className="mt-1 text-sm text-ink-secondary">{message}</p>
 
           {onRetry ? (

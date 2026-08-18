@@ -39,7 +39,7 @@ export function ConfidenceChart({ probabilities, sentiment }: ConfidenceChartPro
         Class probabilities
       </h3>
 
-      <dl className="mt-4 space-y-4">
+      <div className="mt-4 space-y-4">
         {ROWS.map(({ key, label, fill, dot }, index) => {
           const value = probabilities[key] ?? 0;
           const isWinner = key === sentiment;
@@ -49,27 +49,25 @@ export function ConfidenceChart({ probabilities, sentiment }: ConfidenceChartPro
           return (
             <div
               key={key}
-              className="group animate-result-in"
+              className="group animate-result-in grid grid-cols-[1fr_auto] items-baseline gap-x-3"
               style={{ animationDelay: `${120 + index * 70}ms` }}
             >
-              <div className="flex items-baseline justify-between gap-3">
-                <dt className="flex items-center gap-2 text-sm text-ink-secondary">
-                  <span aria-hidden className={`size-2 shrink-0 rounded-full ${dot}`} />
-                  <span className={isWinner ? "font-semibold text-ink" : undefined}>
-                    {label}
-                  </span>
-                </dt>
-                <dd
-                  className={`text-sm tabular-nums ${
-                    isWinner ? "font-semibold text-ink" : "text-ink-secondary"
-                  }`}
-                >
-                  {formatPercent(value)}
-                </dd>
-              </div>
+              <span className="flex items-center gap-2 text-sm text-ink-secondary">
+                <span aria-hidden className={`size-2 shrink-0 rounded-full ${dot}`} />
+                <span className={isWinner ? "font-semibold text-ink" : undefined}>
+                  {label}
+                </span>
+              </span>
+              <span
+                className={`text-sm tabular-nums ${
+                  isWinner ? "font-semibold text-ink" : "text-ink-secondary"
+                }`}
+              >
+                {formatPercent(value)}
+              </span>
 
               <div
-                className="mt-2 h-2.5 w-full rounded-r-[4px] bg-track"
+                className="col-span-2 mt-2 h-2.5 w-full rounded-r-[4px] bg-track"
                 role="img"
                 aria-label={`${label}: ${formatPercent(value)}`}
                 title={`${label} — ${formatPercent(value)}`}
@@ -84,7 +82,7 @@ export function ConfidenceChart({ probabilities, sentiment }: ConfidenceChartPro
             </div>
           );
         })}
-      </dl>
+      </div>
     </div>
   );
 }

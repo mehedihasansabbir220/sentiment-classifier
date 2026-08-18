@@ -1,9 +1,8 @@
 # Inference services. These consume the model loaded at startup;
 # they never load, download, or train models.
 
+from app.errors import EmptyTextError, InferenceError, InvalidTextError
 from app.services.sentiment_service import (
-    InferenceError,
-    InvalidTextError,
     SentimentPrediction,
     SentimentService,
     SentimentServiceError,
@@ -12,6 +11,7 @@ from app.services.sentiment_service import (
 )
 
 __all__ = [
+    "EmptyTextError",
     "InferenceError",
     "InvalidTextError",
     "SentimentPrediction",

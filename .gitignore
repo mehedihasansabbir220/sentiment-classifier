@@ -20,9 +20,30 @@ frontend/.env.local
 frontend/.env*.local
 npm-debug.log*
 
-# Fine-tuned checkpoint (copy from Colab locally; do not commit weights)
+# Fine-tuned checkpoint. Trained externally in Colab and extracted here
+# locally; the directory stays in git, its contents never do. See model/README.md.
 model/sentiment-distilbert/*
 !model/sentiment-distilbert/.gitkeep
+
+# Model weights and training artifacts, wherever they land. Belt and braces for
+# a checkpoint extracted to the wrong folder — these are far too large for git.
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.msgpack
+*.onnx
+*.tflite
+*.gguf
+*.npz
+
+# Colab / training leftovers that sometimes ride along with an export
+checkpoint-*/
+runs/
+logs/
+wandb/
 
 # OS / IDE
 .DS_Store
