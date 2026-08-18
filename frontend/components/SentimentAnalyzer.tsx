@@ -21,6 +21,7 @@ export function SentimentAnalyzer() {
   const [text, setText] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<PredictionResponse | null>(null);
+  const [resultKey, setResultKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const isLoading = status === "loading";
@@ -35,6 +36,7 @@ export function SentimentAnalyzer() {
     try {
       // 3-4. Call FastAPI and receive the prediction.
       setResult(await predictSentiment(input));
+      setResultKey((previous) => previous + 1);
       setStatus("success"); // 5-7. Result, confidence and probabilities render.
     } catch (caught) {
       // 8. Handle API errors.
@@ -72,7 +74,9 @@ export function SentimentAnalyzer() {
         <ErrorState message={error} onRetry={() => void runAnalysis(text)} />
       ) : null}
 
-      {status === "success" && result ? <SentimentResult result={result} /> : null}
+      {status === "success" && result ? (
+        <SentimentResult key={resultKey} result={result} />
+      ) : null}
 
       {status === "idle" ? (
         <p className="rounded-xl border border-dashed border-line px-5 py-8 text-center text-sm text-ink-muted">
