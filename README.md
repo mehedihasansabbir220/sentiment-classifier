@@ -118,6 +118,21 @@ models/model_loader.py  load the checkpoint once at startup
 config.py           settings (MODEL_PATH, CORS origins)
 ```
 
+## Tests
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest                  # fast suite, fake model, no weights loaded
+pytest -m integration   # runs the real checkpoint from MODEL_PATH
+```
+
+The default suite never loads, trains, or downloads a model: `tests/conftest.py`
+supplies a fake tokenizer and classifier whose tensors flow through the real
+service code, and the FastAPI dependency is swapped with
+`app.dependency_overrides`. Integration tests skip themselves when the
+checkpoint is missing.
+
 ## Status
 
 | Area | Status |
@@ -127,6 +142,7 @@ config.py           settings (MODEL_PATH, CORS origins)
 | Model loading (startup, single instance) | Ready |
 | Prediction inference | Ready |
 | Prediction REST endpoint | Ready |
+| Automated tests (pytest) | Ready |
 | Frontend UI | Not implemented |
 | Training / datasets | Out of scope |
 # sentiment-classifier
