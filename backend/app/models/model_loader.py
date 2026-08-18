@@ -7,7 +7,8 @@ Face is called with ``local_files_only=True`` so a missing or malformed
 checkpoint fails loudly instead of silently pulling a model from the Hub.
 
 The model is loaded exactly once, at FastAPI startup, via :func:`init_model`.
-Request handlers call :func:`get_model` to reuse that single instance.
+The inference service calls :func:`get_model` to reuse that single instance;
+inference itself lives in :mod:`app.services.inference`.
 """
 
 from __future__ import annotations
@@ -46,8 +47,6 @@ _WEIGHT_FILES = (
     "flax_model.msgpack",
 )
 
-_MAX_LENGTH = 512
-
 
 class ModelLoadError(RuntimeError):
     """Raised when the local checkpoint is missing, incomplete, or invalid."""
@@ -55,48 +54,17 @@ class ModelLoadError(RuntimeError):
 
 @dataclass(frozen=True)
 class SentimentModel:
-    """A loaded checkpoint plus everything inference needs."""
+    """A loaded checkpoint and the context needed to run it.
+
+    Deliberately a plain container: inference lives in
+    :mod:`app.services.inference`, not here.
+    """
 
     tokenizer: object
     model: object
     device: torch.device
     id2label: dict[int, str]
     model_path: Path
-
-    @torch.inference_mode()
-    def predict(self, texts: list[str]) -> list[dict[str, float | str]]:
-        """Classify texts. Runs without gradients and without dropout.
-
-        Returns one dict per input with the predicted ``label``, its
-        ``confidence``, and the full ``probabilities`` map.
-        """
-        if not texts:
-            return []
-
-        encoded = self.tokenizer(
-            texts,
-            return_tensors="pt",
-            truncation=True,
-            max_length=_MAX_LENGTH,
-            padding=True,
-        )
-        encoded = {key: value.to(self.device) for key, value in encoded.items()}
-
-        logits = self.model(**encoded).logits
-        probabilities = torch.softmax(logits, dim=-1).cpu()
-
-        results: list[dict[str, float | str]] = []
-        for row in probabilities:
-            scores = {self.id2label[index]: float(score) for index, score in enumerate(row)}
-            label = max(scores, key=scores.__getitem__)
-            results.append(
-                {
-                    "label": label,
-                    "confidence": scores[label],
-                    "probabilities": scores,
-                }
-            )
-        return results
 
 
 def resolve_device() -> torch.device:

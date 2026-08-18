@@ -84,6 +84,40 @@ docker compose up --build
 
 Requires the checkpoint to already exist under `model/sentiment-distilbert/`.
 
+## API
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | Liveness check — `{"status": "ok"}` |
+| POST | `/predict` | Classify one text |
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"text": "I really enjoyed this movie."}'
+```
+
+```json
+{
+  "text": "I really enjoyed this movie.",
+  "sentiment": "positive",
+  "confidence": 0.9971,
+  "probabilities": {"negative": 0.0029, "positive": 0.9971}
+}
+```
+
+Errors: `422` invalid or blank text, `500` inference failure, `503` model unavailable.
+
+### Layering
+
+```
+api/routes.py       HTTP only — validate, delegate, shape the response
+schemas.py          request/response contracts
+services/inference.py   tokenize -> logits -> softmax -> label
+models/model_loader.py  load the checkpoint once at startup
+config.py           settings (MODEL_PATH, CORS origins)
+```
+
 ## Status
 
 | Area | Status |
@@ -92,7 +126,7 @@ Requires the checkpoint to already exist under `model/sentiment-distilbert/`.
 | Backend config + health check | Ready |
 | Model loading (startup, single instance) | Ready |
 | Prediction inference | Ready |
-| Prediction REST endpoint | Not implemented |
+| Prediction REST endpoint | Ready |
 | Frontend UI | Not implemented |
 | Training / datasets | Out of scope |
 # sentiment-classifier
