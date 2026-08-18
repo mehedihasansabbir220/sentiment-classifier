@@ -113,7 +113,7 @@ Errors: `422` invalid or blank text, `500` inference failure, `503` model unavai
 ```
 api/routes.py       HTTP only — validate, delegate, shape the response
 schemas.py          request/response contracts
-services/inference.py   tokenize -> logits -> softmax -> label
+services/sentiment_service.py  validate -> tokenize -> logits -> softmax -> label
 models/model_loader.py  load the checkpoint once at startup
 config.py           settings (MODEL_PATH, CORS origins)
 ```

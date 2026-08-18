@@ -1,7 +1,7 @@
 """HTTP routes.
 
 Routes only validate input, delegate, and shape the response. All model and
-tensor work lives in :mod:`app.services.inference`.
+tensor work lives in :mod:`app.services.sentiment_service`.
 """
 
 import logging
@@ -9,7 +9,12 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.schemas import HealthResponse, PredictRequest, PredictResponse
-from app.services.inference import InferenceError, SentimentService, get_sentiment_service
+from app.services.sentiment_service import (
+    InferenceError,
+    InvalidTextError,
+    SentimentService,
+    get_sentiment_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +36,11 @@ def predict(
     # turned into a 503 by the handler registered in app.main.
     try:
         result = service.predict(payload.text)
+    except InvalidTextError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
     except InferenceError as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -8,7 +8,7 @@ checkpoint fails loudly instead of silently pulling a model from the Hub.
 
 The model is loaded exactly once, at FastAPI startup, via :func:`init_model`.
 The inference service calls :func:`get_model` to reuse that single instance;
-inference itself lives in :mod:`app.services.inference`.
+inference itself lives in :mod:`app.services.sentiment_service`.
 """
 
 from __future__ import annotations
@@ -57,7 +57,7 @@ class SentimentModel:
     """A loaded checkpoint and the context needed to run it.
 
     Deliberately a plain container: inference lives in
-    :mod:`app.services.inference`, not here.
+    :mod:`app.services.sentiment_service`, not here.
     """
 
     tokenizer: object

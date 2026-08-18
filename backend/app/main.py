@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from app.api.routes import router
 from app.config import settings
 from app.models.model_loader import ModelLoadError, init_model
-from app.services.inference import reset_sentiment_service
+from app.services.sentiment_service import reset_sentiment_service
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
