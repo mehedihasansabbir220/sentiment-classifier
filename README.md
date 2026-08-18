@@ -76,6 +76,33 @@ npm run dev
 
 UI: `http://localhost:3000`
 
+Next.js App Router + TypeScript + Tailwind CSS v4, calling the FastAPI backend.
+
+Point it at the API with `NEXT_PUBLIC_API_URL` (defaults to
+`http://localhost:8000`):
+
+```bash
+cp .env.local.example .env.local
+```
+
+`NEXT_PUBLIC_*` values are inlined when the page is compiled, so change it
+before `npm run build`. The Docker image runs `next dev`, which picks the value
+up from the container environment at request time.
+
+```
+lib/api.ts                      predictSentiment() -> POST /predict
+lib/types.ts                    PredictionRequest / PredictionResponse / Probabilities
+lib/constants.ts                API_BASE_URL — the only place the URL is read
+app/page.tsx                    layout only — header, subtitle, footer
+components/SentimentAnalyzer    owns the idle/loading/success/error state
+components/SentimentInput       textarea, character counter, actions
+components/SentimentResult      hero confidence figure + breakdown
+components/ConfidenceChart      per-class probability bars
+components/ExampleReviews       one-click sample texts
+components/LoadingState         skeleton while analyzing
+components/ErrorState           inline failure panel
+```
+
 ### Docker
 
 ```bash
@@ -143,6 +170,7 @@ checkpoint is missing.
 | Prediction inference | Ready |
 | Prediction REST endpoint | Ready |
 | Automated tests (pytest) | Ready |
-| Frontend UI | Not implemented |
+| Frontend UI | Ready |
+| Frontend ↔ API integration | Ready |
 | Training / datasets | Out of scope |
 # sentiment-classifier
