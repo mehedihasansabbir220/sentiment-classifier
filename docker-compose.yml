@@ -5,7 +5,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      CHECKPOINT_DIR: /model/sentiment-distilbert
+      MODEL_PATH: /model/sentiment-distilbert
       CORS_ORIGINS: '["http://localhost:3000"]'
     volumes:
       - ./model/sentiment-distilbert:/model/sentiment-distilbert:ro

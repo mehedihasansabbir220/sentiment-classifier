@@ -51,7 +51,11 @@ Do not commit the weights. The directory is kept in git; the checkpoint files ar
 
 ### Backend
 
+The checkpoint location is configurable with `MODEL_PATH` (default
+`model/sentiment-distilbert`, resolved relative to the repository root):
+
 ```bash
+export MODEL_PATH=model/sentiment-distilbert   # optional
 cd backend
 python -m venv .venv
 source .venv/bin/activate
@@ -86,7 +90,8 @@ Requires the checkpoint to already exist under `model/sentiment-distilbert/`.
 |------|--------|
 | Project structure | Ready |
 | Backend config + health check | Ready |
-| Model loading / inference | Not implemented |
+| Model loading (startup, single instance) | Ready |
+| Prediction inference | Ready |
 | Prediction REST endpoint | Not implemented |
 | Frontend UI | Not implemented |
 | Training / datasets | Out of scope |
